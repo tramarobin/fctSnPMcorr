@@ -1,25 +1,42 @@
-%% Trama Robin (LIBM) 07/05/2019
+%% Trama Robin (LIBM) 2019/05/07
+%% Trama Robin (HPL) 2023/08/15
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% INPUTS
 % OBLIGATORY
-% Maps : in cells, what we want to correlate
-% Varcorr : variable to correlate with
+
 
 % OPTIONAL (see at begining of the function)
-
+% meanData is the varibale Y
+% corrData is the variable X
+% dimensions is the dimension of the spectra [1 Y] or maps [X Y]
 
 %% OUTPUTS
 % Figures and files.mat for correlations
-% Contour plots correspond to statisticaly significant correlation
+% Contour plots or spectra correspond to statisticaly significant correlation
+
+% Level 1 analysis (doesn't consider participants, without the RFX)
+% apha is the slope
+% beta is the intersect 
+% alpha t is the statistical test on the slope (inferance to alpha level using SnPM method)
+% beta t is the statistical test on the intersect (inferance to alpha level using SnPM method)
+% r is the coefficient of correlation
+% mean is the average value
+
+% Level 2 analysis (considers participants, with the RFX) --> this is the
+% values you want to report if you have several participants in the study
+% apha is the slope
+% beta is the intersect 
+% alpha t is the statistical test on the slope (inferance to alpha level using SnPM method)
+% beta t is the statistical test on the intersect (inferance to alpha level using SnPM method)
 
 %% Informations
 % See spm1d.org for the spm1d package informations used with this functions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function fctCORR(maps_1D,dimensions,varCorr,varargin)
+function fctSnPMcorr(maps_1D,dimensions,varCorr,varargin)
 
 %% Optional inputs
 p = inputParser;
@@ -34,7 +51,7 @@ addParameter(p,'corrRFX',1,@isnumeric); % 0 to perform only linear regression
 
 % utilities
 addParameter(p,'savedir','RESULTS',@ischar); % save directory
-addParameter(p,'effectsNames','x',@ischar); % name of the different effect tested (changes the name of folder and files)
+addParameter(p,'effectNames','x',@ischar); % name of the different effect tested (changes the name of folder and files)
 
 % statistical parameters
 addParameter(p,'alpha',0.05,@isnumeric); % alpha used for the ANOVA
@@ -87,7 +104,7 @@ ylab=p.Results.ylabel;
 xlab=p.Results.xlabel;
 Fs=p.Results.samplefrequency;
 savedir=p.Results.savedir;
-effectNames=p.Results.effectsNames;
+effectNames=p.Results.effectNames;
 Permutations=p.Results.Permutations;
 ylimits=p.Results.ylimits;
 xlimits=p.Results.xlimits;
@@ -133,6 +150,10 @@ if ~isempty(rangeVarCorr)
 end
 
 meanData=reshape(mean(maps_1D),dimensions(1),dimensions(2));
+
+if isempty(range)
+   range=(max(Var_s)-min(Var_s))/7;
+end
 
 if corrRFX==1
     %% Random effect analysis
